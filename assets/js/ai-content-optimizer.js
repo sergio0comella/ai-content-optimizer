@@ -17,11 +17,12 @@ jQuery(document).ready(function ($) {
     }
 
     $.ajax({
-      url: ajaxurl,
+      url: aiOptimizerData.ajaxurl,
       method: "POST",
       data: {
         action: "ai_optimize_content",
         content: fullContent,
+        _ajax_nonce: aiOptimizerData.nonce, // Add nonce here
       },
       success: function (response) {
         // Display the suggestions as HTML

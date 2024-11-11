@@ -1,8 +1,7 @@
 # AI Content Optimizer
 
-**Contributors:** panezio  
 **Donate link:** [https://ko-fi.com/panezio](https://ko-fi.com/panezio)  
-**Tags:** AI, content, SEO, readability, keyword, optimization, engagement
+**Tags:** AI, content, SEO
 **Requires at least:** 6.6  
 **Tested up to:** 6.6  
 **Stable tag:** 1.0.0  
@@ -10,7 +9,7 @@
 **License:** GPLv2 or later  
 **License URI:** [https://www.gnu.org/licenses/gpl-2.0.html](https://www.gnu.org/licenses/gpl-2.0.html)  
 
-A WordPress plugin that uses AI to suggest improvements for SEO, readability, keyword optimization, and engagement. This plugin also provides a user-friendly interface to view suggestions in a new, styled HTML page.
+A WordPress plugin using AI to suggest SEO, readability, keyword, and engagement improvements, with a user-friendly HTML view for suggestions.
 
 ## Description
 

@@ -1,6 +1,6 @@
 <?php
 /*
-Plugin Name: AI-Powered Content Optimizer
+Plugin Name: AI Content Optimizer
 Description: Provides AI-driven content optimization suggestions for SEO, readability, and engagement.
 Version: 1.0.0
 Author: <a href="https://sergiocomella.it">Panezio</a>
@@ -10,31 +10,50 @@ License: GPLv2 or later
 if (!defined('ABSPATH')) exit; // Exit if accessed directly
 require_once plugin_dir_path(__FILE__) . 'includes/Parsedown.php';
 
-// Enqueue plugin styles and scripts
 function ai_optimizer_enqueue_assets()
 {
-    wp_enqueue_style('ai-optimizer-style', plugin_dir_url(__FILE__) . 'assets/css/ai-content-optimizer-style.css');
+    $css_version = filemtime(plugin_dir_path(__FILE__) . 'assets/css/ai-content-optimizer-style.css'); // Use file modification time as version
+    wp_enqueue_style('ai-optimizer-style', plugin_dir_url(__FILE__) . 'assets/css/ai-content-optimizer-style.css', array(), $css_version);
+
     wp_enqueue_script('ai-optimizer-script', plugin_dir_url(__FILE__) . 'assets/js/ai-content-optimizer.js', array('jquery'), '1.0.0', true);
 
-    // Make `ajaxurl` available to the script
-    wp_localize_script('ai-optimizer-script', 'ajaxurl', admin_url('admin-ajax.php'));
+    // Generate nonce for AJAX requests
+    $nonce = wp_create_nonce('ai_optimizer_nonce');
+
+    // Localize script with ajaxurl and nonce
+    wp_localize_script('ai-optimizer-script', 'aiOptimizerData', array(
+        'ajaxurl' => admin_url('admin-ajax.php'),
+        'nonce'   => $nonce
+    ));
 }
 add_action('admin_enqueue_scripts', 'ai_optimizer_enqueue_assets');
+
 
 // Include AI Analysis Functions
 require_once plugin_dir_path(__FILE__) . 'includes/ai-content-analyzer.php';
 
 function ai_optimize_content()
 {
-    if (!current_user_can('edit_posts')) {
-        wp_die('Unauthorized');
+    // Check if the nonce is valid
+    if (!isset($_POST['_ajax_nonce']) || !wp_verify_nonce(sanitize_text_field(wp_unslash($_POST['_ajax_nonce'])), 'ai_optimizer_nonce')) {
+        esc_html_e('Unauthorized request.', 'ai-content-optimizer');
+        wp_die();
     }
 
-    $content = isset($_POST['content']) ? sanitize_text_field($_POST['content']) : '';
+    // Retrieve and sanitize content
+    $content = isset($_POST['content']) ? sanitize_text_field(wp_unslash($_POST['content'])) : '';
+
+    if (empty($content)) {
+        esc_html_e('Content is required.', 'ai-content-optimizer');
+        wp_die();
+    }
+
+    // Process the sanitized content
     $suggestions = ai_content_optimizer_analyze($content);
 
-    echo $suggestions;
-    wp_die();
+    // Output the suggestions safely
+    echo esc_html($suggestions);
+    wp_die(); // Properly end AJAX response
 }
 add_action('wp_ajax_ai_optimize_content', 'ai_optimize_content');
 
@@ -53,7 +72,7 @@ function ai_optimizer_meta_box_callback($post)
     echo '</div>';
 
     echo '<button type="button" id="analyze-content" class="button button-primary" style="background-color: #0073aa; color: #fff; padding: 10px 15px; border: none; border-radius: 4px; cursor: pointer;">Analyze Content</button>';
-    echo '<div id="loading-spinner" style="display: none; margin-top: 10px;"><img src="' . plugin_dir_url(__FILE__) . 'assets/images/loading-spinner.gif" alt="Loading..." style="width: 20px; height: 20px; vertical-align: middle;" /> Analyzing...</div>';
+    echo esc_html('<div id="loading-spinner" style="display: none; margin-top: 10px;"><img src="' . plugin_dir_url(__FILE__) . 'assets/images/loading-spinner.gif" alt="Loading..." style="width: 20px; height: 20px; vertical-align: middle;" /> Analyzing...</div>');
 }
 
 // Register settings page

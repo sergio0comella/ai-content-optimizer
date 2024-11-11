@@ -36,7 +36,7 @@ function ai_content_optimizer_analyze($content)
             'Authorization' => 'Bearer ' . $api_key,
             'Content-Type' => 'application/json'
         ],
-        'body' => json_encode($data)
+        'body' => wp_json_encode($data)
     ]);
 
     if (is_wp_error($response)) {
@@ -52,3 +52,4 @@ function ai_content_optimizer_analyze($content)
 
     return $html_output;
 }
+
