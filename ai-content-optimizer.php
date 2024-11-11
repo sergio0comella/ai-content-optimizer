@@ -12,18 +12,14 @@ require_once plugin_dir_path(__FILE__) . 'includes/Parsedown.php';
 
 function ai_optimizer_enqueue_assets()
 {
-    $css_version = filemtime(plugin_dir_path(__FILE__) . 'assets/css/ai-content-optimizer-style.css'); // Use file modification time as version
-    wp_enqueue_style('ai-optimizer-style', plugin_dir_url(__FILE__) . 'assets/css/ai-content-optimizer-style.css', array(), $css_version);
+    wp_enqueue_style('ai-optimizer-style', plugin_dir_url(__FILE__) . 'assets/css/ai-content-optimizer-style.css', array(), filemtime(plugin_dir_path(__FILE__) . 'assets/css/ai-content-optimizer-style.css'));
 
     wp_enqueue_script('ai-optimizer-script', plugin_dir_url(__FILE__) . 'assets/js/ai-content-optimizer.js', array('jquery'), '1.0.0', true);
 
-    // Generate nonce for AJAX requests
-    $nonce = wp_create_nonce('ai_optimizer_nonce');
-
-    // Localize script with ajaxurl and nonce
+    // Generate and pass nonce to JavaScript
     wp_localize_script('ai-optimizer-script', 'aiOptimizerData', array(
         'ajaxurl' => admin_url('admin-ajax.php'),
-        'nonce'   => $nonce
+        'nonce'   => wp_create_nonce('ai_optimizer_nonce')
     ));
 }
 add_action('admin_enqueue_scripts', 'ai_optimizer_enqueue_assets');
@@ -35,9 +31,9 @@ require_once plugin_dir_path(__FILE__) . 'includes/ai-content-analyzer.php';
 function ai_optimize_content()
 {
     // Check if the nonce is valid
-    if (!isset($_POST['_ajax_nonce']) || !wp_verify_nonce(sanitize_text_field(wp_unslash($_POST['_ajax_nonce'])), 'ai_optimizer_nonce')) {
-        esc_html_e('Unauthorized request.', 'ai-content-optimizer');
-        wp_die();
+    $nonce = isset($_POST['_ajax_nonce']) ? sanitize_text_field(wp_unslash($_POST['_ajax_nonce'])) : '';
+    if (!wp_verify_nonce($nonce, 'ai_optimizer_nonce')) {
+        wp_die('Unauthorized request.');
     }
 
     // Retrieve and sanitize content
@@ -52,10 +48,11 @@ function ai_optimize_content()
     $suggestions = ai_content_optimizer_analyze($content);
 
     // Output the suggestions safely
-    echo esc_html($suggestions);
+    echo wp_kses_post($suggestions);
     wp_die(); // Properly end AJAX response
 }
 add_action('wp_ajax_ai_optimize_content', 'ai_optimize_content');
+
 
 // Add meta box to the post editor
 function ai_optimizer_add_meta_box()
@@ -72,7 +69,7 @@ function ai_optimizer_meta_box_callback($post)
     echo '</div>';
 
     echo '<button type="button" id="analyze-content" class="button button-primary" style="background-color: #0073aa; color: #fff; padding: 10px 15px; border: none; border-radius: 4px; cursor: pointer;">Analyze Content</button>';
-    echo esc_html('<div id="loading-spinner" style="display: none; margin-top: 10px;"><img src="' . plugin_dir_url(__FILE__) . 'assets/images/loading-spinner.gif" alt="Loading..." style="width: 20px; height: 20px; vertical-align: middle;" /> Analyzing...</div>');
+    echo '<div id="loading-spinner" style="display: none; margin-top: 10px;"><img src="' . esc_attr(plugin_dir_url(__FILE__)) . 'assets/images/loading-spinner.gif" alt="Loading..." style="width: 20px; height: 20px; vertical-align: middle;" /> Analyzing...</div>';
 }
 
 // Register settings page

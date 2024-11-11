@@ -22,7 +22,7 @@ jQuery(document).ready(function ($) {
       data: {
         action: "ai_optimize_content",
         content: fullContent,
-        _ajax_nonce: aiOptimizerData.nonce, // Add nonce here
+        _ajax_nonce: aiOptimizerData.nonce, // Pass the nonce here
       },
       success: function (response) {
         // Display the suggestions as HTML
